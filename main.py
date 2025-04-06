@@ -20,7 +20,10 @@ def run(args):
     """runs actual processes."""
     with tempfile.TemporaryDirectory() as tmp_dir:
 
-        models_path = download_artifact(path=tmp_dir)
+        if args.path:
+            models_path = args.path
+        else:
+            models_path = download_artifact(path=tmp_dir)
 
         assert os.path.exists(models_path), "models not found!!"
     
@@ -71,7 +74,7 @@ def main():
     parser = argparse.ArgumentParser("Posture & Expression detection.")
     parser.add_argument("-d", "--display", action="store_true", help="Flag to diplay output.")
     parser.add_argument("-v", "--version", action="store_true", help="Flag to diplay version.")
-    parser.add_argument("-p", "--path", type=str, help="Flag to diplay version.")
+    parser.add_argument("-p", "--path", type=str, help="Provide model path.")
     args = parser.parse_args()
     if args.version:
         print ("Major Version: 1.0.0")
