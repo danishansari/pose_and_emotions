@@ -34,6 +34,7 @@ def run(args):
         fc = 0 # frame count
         st = time.time()  # start time
         while grabber.is_open():
+            ct = time.time()
             frame = grabber.get()
             fc += 1
             post, emot, conf= 0, 0, 0
@@ -56,7 +57,12 @@ def run(args):
                 msg += f" FPS: {fps:.2f}"
             if msg:
                 logger.info(msg)
-        
+
+            # maintain 15 FPS
+            d = time.time() - ct
+            if d < 0.066:
+                time.sleep(d-0.066)
+
         grabber.close()
         logger.info("application closed successfully.")
 
@@ -65,6 +71,7 @@ def main():
     parser = argparse.ArgumentParser("Posture & Expression detection.")
     parser.add_argument("-d", "--display", action="store_true", help="Flag to diplay output.")
     parser.add_argument("-v", "--version", action="store_true", help="Flag to diplay version.")
+    parser.add_argument("-p", "--path", type=str, help="Flag to diplay version.")
     args = parser.parse_args()
     if args.version:
         print ("Major Version: 1.0.0")
