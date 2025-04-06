@@ -10,7 +10,7 @@ def download_artifact(url:str="https://drive.google.com/uc?id=1gQEBda-H7Ix27zJsJ
     """function to download artifacts from google-drive."""
 
     if os.path.exists(f"{path}/models"):
-        return
+        return f"{path}/models"
     
     output = f"{path}/models.zip"
 
