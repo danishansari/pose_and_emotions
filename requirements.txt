@@ -1,0 +1,4 @@
+numpy
+loguru
+ultralytics
+gdown
