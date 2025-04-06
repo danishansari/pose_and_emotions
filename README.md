@@ -11,7 +11,7 @@ For pose estimation [Yolov11](https://docs.ultralytics.com/tasks/pose/) was used
 
 ## Setup
 ```
-conda create -n <name> python=3.6
+conda create -n <name> python=3.11.11
 conda activate <name>
 pip install -r requirements.txt
 ```
