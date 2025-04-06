@@ -1,8 +1,15 @@
+"""RepVGG implementation.
+
+taken from: https://github.com/George-Ogden/emotion
+"""
+
 import torch.nn as nn
 import numpy as np
 import torch
 
+
 def conv_bn(in_channels, out_channels, kernel_size, stride, padding, groups=1):
+    """convolution block"""
     result = nn.Sequential()
     result.add_module('conv', nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
                                                   kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=False))
@@ -10,9 +17,11 @@ def conv_bn(in_channels, out_channels, kernel_size, stride, padding, groups=1):
     return result
 
 class RepVGGBlock(nn.Module):
+    """RepVGG blocks."""
 
     def __init__(self, in_channels, out_channels, kernel_size,
                  stride=1, padding=0, dilation=1, groups=1, padding_mode='zeros', deploy=False):
+        """RepVGGBlock initializer."""
         super(RepVGGBlock, self).__init__()
         self.deploy = deploy
         self.groups = groups
@@ -37,6 +46,7 @@ class RepVGGBlock(nn.Module):
 
 
     def forward(self, inputs):
+        """forward function run RepVGG block."""
         if hasattr(self, 'rbr_reparam'):
             return self.nonlinearity(self.rbr_reparam(inputs))
 
@@ -54,18 +64,21 @@ class RepVGGBlock(nn.Module):
     #   for example, apply some penalties or constraints during training, just like you do to the other models.
 #   May be useful for quantization or pruning.
     def get_equivalent_kernel_bias(self):
+        """function to get equivalent kernel bias."""
         kernel3x3, bias3x3 = self._fuse_bn_tensor(self.rbr_dense)
         kernel1x1, bias1x1 = self._fuse_bn_tensor(self.rbr_1x1)
         kernelid, biasid = self._fuse_bn_tensor(self.rbr_identity)
         return kernel3x3 + self._pad_1x1_to_3x3_tensor(kernel1x1) + kernelid, bias3x3 + bias1x1 + biasid
 
     def _pad_1x1_to_3x3_tensor(self, kernel1x1):
+        """function to pad tensors."""
         if kernel1x1 is None:
             return 0
         else:
             return torch.nn.functional.pad(kernel1x1, [1,1,1,1])
 
     def _fuse_bn_tensor(self, branch):
+        """function to fuse tensors."""
         if branch is None:
             return 0, 0
         if isinstance(branch, nn.Sequential):
@@ -94,6 +107,7 @@ class RepVGGBlock(nn.Module):
         return kernel * t, beta - running_mean * gamma / std
 
     def switch_to_deploy(self):
+        """function to enable deployment mode."""
         if hasattr(self, 'rbr_reparam'):
             return
         kernel, bias = self.get_equivalent_kernel_bias()
@@ -110,10 +124,11 @@ class RepVGGBlock(nn.Module):
             self.__delattr__('rbr_identity')
 
 
-
 class RepVGG(nn.Module):
+    """RepVGG class implementation."""
 
     def __init__(self, num_blocks, num_classes=1000, width_multiplier=None, override_groups_map=None, deploy=False):
+        """RepVGG initializer."""
         super(RepVGG, self).__init__()
 
         assert len(width_multiplier) == 4
@@ -137,6 +152,7 @@ class RepVGG(nn.Module):
 
 
     def _make_stage(self, planes, num_blocks, stride):
+        """function to make stages."""
         strides = [stride] + [1]*(num_blocks-1)
         blocks = []
         for stride in strides:
@@ -148,6 +164,7 @@ class RepVGG(nn.Module):
         return nn.Sequential(*blocks)
 
     def forward(self, x):
+        """function run forward RepVGG model."""
         out = self.stage0(x)
         out = self.stage1(out)
         out = self.stage2(out)
@@ -165,5 +182,6 @@ g2_map = {l: 2 for l in optional_groupwise_layers}
 g4_map = {l: 4 for l in optional_groupwise_layers}
 
 def create_RepVGG_A0(deploy=False):
+    """function to create and return RegVGG model."""
     return RepVGG(num_blocks=[2, 4, 14, 1], num_classes=8,
                   width_multiplier=[0.75, 0.75, 0.75, 2.5], override_groups_map=None, deploy=deploy)

@@ -42,7 +42,7 @@ def run(args):
             if emotion:
                 emot, conf = emotion(frame, kpts)
             if args.display and plot:
-                k = plot.show(frame, kpts)
+                k = plot.show(frame, kpts, [post, emot])
                 if k == 27:
                     break
             msg = ""

@@ -1,11 +1,15 @@
+"""Emotion classification."""
+
 import math
 from pathlib import Path
 from enum import Enum
+
+import numpy as np
+from PIL import Image
+
 import torch
 from torchvision import transforms
-import numpy as np
-import cv2
-from PIL import Image
+
 from src.emotion.repvgg import create_RepVGG_A0
 
 
@@ -42,16 +46,18 @@ class Emotion:
         ])
 
     def face_crop(self, img: np.ndarray, kpts: list[tuple[float]]) -> np.ndarray:
+        """function to crop face."""
         e1 = kpts[0][3][:2] # right-ear
         e2 = kpts[0][4][:2] # left-ear
-        np = kpts[0][0][:2] # nose-point
+        n = kpts[0][0][:2] # nose-point
         w = int(math.dist(e1, e2))
-        x = int(e2[0])
-        y = int(np[1] - int(w * 0.5))
+        x = max(0, int(e2[0]))
+        y = max(0, int(n[1] - int(w * 0.5)))
         h = int(w * 1.2)
         return img[y:y+h, x:x+w]
 
     def predict(self, x: np.ndarray, kpts: list[tuple[float]]) -> tuple[Emots, float]:
+        """function to crop face and predict emotions."""
         x = self.face_crop(x, kpts)
         x = torch.tensor(self.trfms(Image.fromarray(x)), device=self.device).unsqueeze(dim=0)
         y = self.emot(x.to(self.device)).detach().cpu().numpy()
@@ -59,4 +65,5 @@ class Emotion:
         return Emots(p).name, y[0][p]
 
     def __call__(self, x: np.ndarray, kpts: list[tuple[float]]) -> Emots:
+        """caller function to predict emotions."""
         return self.predict(x, kpts)

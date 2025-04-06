@@ -1,9 +1,13 @@
+"""Posture estimation class."""
+
 from enum import Enum
 from pathlib import Path
 from typing import Any
 import math
+
 from loguru import logger
 from numpy import ndarray
+
 from src.posture.pose import Pose
 
 
@@ -42,8 +46,8 @@ class Posture(Pose):
         neck_height =  math.dist(ms, np)
 
         if neck_height / ears_width > thresh:
-            return Position.Upright
-        return Position.Hunched
+            return Position.Upright.name
+        return Position.Hunched.name
 
     def predict(self, x: ndarray) -> tuple[Position, ndarray]:
         """function to predict posture using pose."""
