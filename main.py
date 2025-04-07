@@ -64,7 +64,7 @@ def run(args):
             # maintain 15 FPS
             d = time.time() - ct
             if d < 0.066:
-                time.sleep(d-0.066)
+                time.sleep(0.066-d)
 
         grabber.close()
         logger.info("application closed successfully.")
